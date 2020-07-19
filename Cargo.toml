@@ -10,3 +10,5 @@ edition = "2018"
 actix-web = { version = "2.0.0", features = ["rustls"] }
 actix-rt = "1.0"
 rustls = "0.16"
+serde = "1.0"
+serde_yaml = "0.8"

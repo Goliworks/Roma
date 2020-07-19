@@ -4,6 +4,7 @@ use actix_web::client::Client;
 mod handler;
 mod utils;
 mod config;
+mod yaml_model;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
