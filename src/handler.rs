@@ -6,8 +6,8 @@ use crate::config;
 
 pub async fn handler(
     req: HttpRequest,
-    conf: web::Data<config::Config>,
     body: web::Bytes,
+    conf: web::Data<config::Config>,
     client: web::Data<Client>)
     -> Result<HttpResponse, Error> {
 
@@ -28,7 +28,12 @@ pub async fn handler(
         forwarded_req
     };
 
-    let res = forwarded_req.send_body(body).await.map_err(Error::from)?;
+    let res;
+
+    match forwarded_req.send_body(body).await.map_err(Error::from) {
+        Ok(f) => res = f,
+        Err(_) => return Ok(HttpResponse::BadGateway().body("<h1>Error 502</h1><h2>Bad Gateway</h2>"))
+    };
 
     let mut client_resp = HttpResponse::build(res.status());
 
