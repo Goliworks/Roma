@@ -1,26 +1,22 @@
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web::client::Client;
 
-use std::collections::HashMap;
-
 use crate::utils;
+use crate::config;
 
 pub async fn handler(
     req: HttpRequest,
+    conf: web::Data<config::Config>,
     body: web::Bytes,
     client: web::Data<Client>)
     -> Result<HttpResponse, Error> {
-
-    let mut domains:HashMap<&str, &str> = HashMap::new();
-    domains.insert("dev1.test", "localhost:3000");
-    domains.insert("dev2.test", "localhost:3100");
 
     let dom = utils::get_domain(&req);
     println!("{}", dom);
 
     println!("{}", req.uri().path_and_query().unwrap()); // test.
 
-    let dest = format!("http://{}{}", domains.get(dom).unwrap(), req.uri().path_and_query().unwrap());
+    let dest = format!("http://{}{}", conf.destinations.get(dom).unwrap(), req.uri().path_and_query().unwrap());
 
     let forwarded_req = client
         .request_from(dest, req.head())
