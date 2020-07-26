@@ -9,7 +9,20 @@ pub struct ConfigYml {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Http {
-    pub port: Option<u16>
+    pub port: Option<u16>,
+    pub tls: Tls
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct Tls {
+    pub port: Option<u16>,
+    pub certificates: Vec<Certificates>
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct Certificates {
+    pub cert: String,
+    pub key: String
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
