@@ -10,7 +10,6 @@ pub async fn handler(
     conf: web::Data<config::Config>,
     client: web::Data<Client>)
     -> Result<HttpResponse, Error> {
-
     let dom = utils::get_domain(&req);
     println!("{}", dom);
 

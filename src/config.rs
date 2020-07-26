@@ -6,7 +6,6 @@ use rustls::ResolvesServerCertUsingSNI;
 use rustls::internal::pemfile::{certs, rsa_private_keys};
 use rustls::sign::{SigningKey, RSASigningKey};
 
-
 use crate::yaml_model::{ConfigYml, Certificates};
 use std::sync::Arc;
 use std::io::{Read, BufReader, BufRead};
@@ -24,7 +23,7 @@ pub struct Config {
     pub destinations: Destinations,
     pub port: u16,
     pub port_tls: u16,
-    pub certificates: Vec<Certificates>
+    pub certificates: Vec<Certificates>,
 }
 
 impl Config {
@@ -39,7 +38,7 @@ impl Config {
             destinations: dest,
             port: yml_conf.http.port.unwrap_or(DEFAULT_PORT),
             port_tls: yml_conf.http.tls.port.unwrap_or(DEFAULT_PORT_TLS),
-            certificates: yml_conf.http.tls.certificates
+            certificates: yml_conf.http.tls.certificates,
         }
     }
 }
@@ -58,9 +57,9 @@ pub fn get_tls_config(certs: &Vec<Certificates>) -> ServerConfig {
 
 fn add_certificate_to_resolver(
     cert: &Certificates,
-    resolver: &mut ResolvesServerCertUsingSNI
-){
-    let br_cert =  &mut BufReader::new(File::open(
+    resolver: &mut ResolvesServerCertUsingSNI,
+) {
+    let br_cert = &mut BufReader::new(File::open(
         &cert.cert
     ).unwrap());
     let br_key = &mut BufReader::new(File::open(
@@ -80,12 +79,11 @@ fn add_certificate_to_resolver(
     );
 
     resolver.add(cn.as_str(), rustls::sign::CertifiedKey::new(
-        cert_chain, signing_key_boxed
+        cert_chain, signing_key_boxed,
     )).expect("Invalid certificate");
 }
 
 fn get_common_name(buffer: &[u8]) -> String {
-
     let res = pem_to_der(&buffer);
 
     let subject = match res {
@@ -94,17 +92,17 @@ fn get_common_name(buffer: &[u8]) -> String {
             match res_x509 {
                 Ok((_rem, cert)) => {
                     cert.tbs_certificate.subject.to_string()
-                },
+                }
                 _ => panic!("x509 parsing failed: {:?}", res_x509),
             }
-        },
+        }
         _ => panic!("PEM parsing failed: {:?}", res),
     };
     let cn: Vec<&str> = subject.split("CN=").collect();
     cn[1].to_string()
 }
 
-fn get_yml_config() -> ConfigYml{
+fn get_yml_config() -> ConfigYml {
     // Get command line arguments.
     let args: Vec<String> = env::args().collect();
     let cfl = &args[1]; // conf file location.

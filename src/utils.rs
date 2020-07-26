@@ -1,8 +1,8 @@
 use actix_web::{HttpRequest, http};
 
-pub fn get_domain(req: &HttpRequest) -> &str{
+pub fn get_domain(req: &HttpRequest) -> &str {
     let domain = match req.uri().host() {
-        Some(_) =>  req.uri().host().unwrap(),
+        Some(_) => req.uri().host().unwrap(),
         None => match req.headers().get(http::header::HOST) {
             None => "",
             Some(h) => {

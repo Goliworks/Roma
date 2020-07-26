@@ -8,16 +8,15 @@ mod yaml_model;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
+    let configuration: config::Config = config::Config::new();
 
-    let configuration:config::Config = config::Config::new();
-
-    let tls_config= config::get_tls_config(&configuration.certificates);
+    let tls_config = config::get_tls_config(&configuration.certificates);
 
     println!("Listen on port {}", configuration.port);
     println!("Listen on TLS port {}", configuration.port_tls);
 
-    let http_port:u16 = configuration.port;
-    let https_port:u16 = configuration.port_tls;
+    let http_port: u16 = configuration.port;
+    let https_port: u16 = configuration.port_tls;
 
     HttpServer::new(move || {
         App::new()
