@@ -19,7 +19,7 @@ pub struct Tls {
     pub certificates: Vec<Certificates>
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Certificates {
     pub cert: String,
     pub key: String

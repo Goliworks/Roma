@@ -3,10 +3,13 @@ use std::env;
 use std::collections::HashMap;
 use rustls::{NoClientAuth, ServerConfig};
 use rustls::ResolvesServerCertUsingSNI;
+use rustls::internal::pemfile::{certs, rsa_private_keys};
+use rustls::sign::{SigningKey, RSASigningKey};
+
 
 use crate::yaml_model::{ConfigYml, Certificates};
 use std::sync::Arc;
-use std::io::Read;
+use std::io::{Read, BufReader, BufRead};
 
 use x509_parser::parse_x509_der;
 use x509_parser::pem::pem_to_der;
@@ -20,7 +23,8 @@ type Destinations = HashMap<String, String>;
 pub struct Config {
     pub destinations: Destinations,
     pub port: u16,
-    pub port_tls: u16
+    pub port_tls: u16,
+    pub certificates: Vec<Certificates>
 }
 
 impl Config {
@@ -31,37 +35,57 @@ impl Config {
             dest.insert(s.0, s.1.location);
         });
 
-        let tls_config = get_tls_config(&yml_conf.http.tls.certificates);
-
         Config {
             destinations: dest,
             port: yml_conf.http.port.unwrap_or(DEFAULT_PORT),
-            port_tls: yml_conf.http.tls.port.unwrap_or(DEFAULT_PORT_TLS)
+            port_tls: yml_conf.http.tls.port.unwrap_or(DEFAULT_PORT_TLS),
+            certificates: yml_conf.http.tls.certificates
         }
     }
 }
 
-fn get_tls_config(certs: &Vec<Certificates>) -> ServerConfig {
+pub fn get_tls_config(certs: &Vec<Certificates>) -> ServerConfig {
     let mut resolver = ResolvesServerCertUsingSNI::new();
     let mut config_tls = ServerConfig::new(NoClientAuth::new());
 
     certs.into_iter().for_each(|c| {
-        add_certificate_to_resolver(c);
+        add_certificate_to_resolver(c, &mut resolver);
     });
 
     config_tls.cert_resolver = Arc::new(resolver);
     config_tls
 }
 
-fn add_certificate_to_resolver(cert: &Certificates){
-    let mut cert_file = File::open( &cert.cert).unwrap();
-    let cn = get_common_name(&mut cert_file);
-    println!("{}", cn);
+fn add_certificate_to_resolver(
+    cert: &Certificates,
+    resolver: &mut ResolvesServerCertUsingSNI
+){
+    let br_cert =  &mut BufReader::new(File::open(
+        &cert.cert
+    ).unwrap());
+    let br_key = &mut BufReader::new(File::open(
+        &cert.key
+    ).unwrap());
+
+    let buffer = br_cert.fill_buf().unwrap();
+    let cn = get_common_name(buffer);
+
+    let cert_chain = certs(br_cert).unwrap();
+    let mut keys = rsa_private_keys(br_key).unwrap();
+    let signing_key = RSASigningKey::new(
+        &keys.remove(0)
+    ).unwrap();
+    let signing_key_boxed: Arc<Box<dyn SigningKey>> = Arc::new(
+        Box::new(signing_key)
+    );
+
+    resolver.add(cn.as_str(), rustls::sign::CertifiedKey::new(
+        cert_chain, signing_key_boxed
+    )).expect("Invalid certificate");
 }
 
-fn get_common_name(cert: &mut File) -> String {
-    let mut buffer:Vec<u8> = Vec::new();
-    cert.read_to_end(&mut buffer).unwrap();
+fn get_common_name(buffer: &[u8]) -> String {
+
     let res = pem_to_der(&buffer);
 
     let subject = match res {
