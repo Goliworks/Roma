@@ -12,9 +12,6 @@ async fn main() -> std::io::Result<()> {
 
     let tls_config = config::get_tls_config(&configuration.certificates);
 
-    println!("Listen on port {}", configuration.port);
-    println!("Listen on TLS port {}", configuration.port_tls);
-
     let http_port: u16 = configuration.port;
     let https_port: u16 = configuration.port_tls;
 
@@ -24,8 +21,16 @@ async fn main() -> std::io::Result<()> {
             .data(Client::new())
             .default_service(web::route().to(handler::handler))
     })
-        .bind(format!("0:{}", http_port))?
-        .bind_rustls(format!("0:{}", https_port), tls_config)?
+        .bind(format!("0:{}", http_port))
+        .and_then(|hs| {
+            println!("Listen on port {}", http_port);
+            Ok(hs)
+        })?
+        .bind_rustls(format!("0:{}", https_port), tls_config)
+        .and_then(|hs| {
+            println!("Listen on TLS port {}", https_port);
+            Ok(hs)
+        })?
         .run()
         .await?;
 
