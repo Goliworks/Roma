@@ -6,9 +6,9 @@ use rustls::ResolvesServerCertUsingSNI;
 use rustls::internal::pemfile::{certs, rsa_private_keys};
 use rustls::sign::{SigningKey, RSASigningKey};
 
-use crate::yaml_model::{ConfigYml, Certificates};
+use crate::yaml_model::{ConfigYml, Certificates, Tls};
 use std::sync::Arc;
-use std::io::{Read, BufReader, BufRead};
+use std::io::{BufReader, BufRead};
 
 use x509_parser::parse_x509_der;
 use x509_parser::pem::pem_to_der;
@@ -34,11 +34,13 @@ impl Config {
             dest.insert(s.0, s.1.location);
         });
 
+        let tls_conf = yml_conf.http.tls.unwrap_or(Tls { port: None, certificates: None });
+
         Config {
             destinations: dest,
             port: yml_conf.http.port.unwrap_or(DEFAULT_PORT),
-            port_tls: yml_conf.http.tls.port.unwrap_or(DEFAULT_PORT_TLS),
-            certificates: yml_conf.http.tls.certificates,
+            port_tls: tls_conf.port.unwrap_or(DEFAULT_PORT_TLS),
+            certificates: tls_conf.certificates.unwrap_or_default(),
         }
     }
 }
