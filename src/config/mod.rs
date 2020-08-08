@@ -6,12 +6,14 @@ use rustls::ResolvesServerCertUsingSNI;
 use rustls::internal::pemfile::{certs, rsa_private_keys};
 use rustls::sign::{SigningKey, RSASigningKey};
 
-use crate::yaml_model::{ConfigYml, Certificates, Tls};
+use yaml_model::{ConfigYml, Certificates, Tls};
 use std::sync::Arc;
 use std::io::{BufReader, BufRead};
 
 use x509_parser::parse_x509_der;
 use x509_parser::pem::pem_to_der;
+
+mod yaml_model;
 
 const DEFAULT_PORT: u16 = 80;
 const DEFAULT_PORT_TLS: u16 = 443;
