@@ -1,7 +1,7 @@
 use actix_web::{web, App, HttpServer};
 use actix_web::client::Client;
 use std::process::exit;
-use std::io::ErrorKind;
+use std::io::{ErrorKind, Error};
 
 mod handler;
 mod utils;
@@ -28,11 +28,7 @@ async fn main() -> std::io::Result<()> {
             Ok(hs)
         })
         .unwrap_or_else(|err| {
-            if err.kind() == ErrorKind::PermissionDenied {
-                println!("Error : port {} is not allowed.", http_port);
-            } else {
-                println!("{:?}", err);
-            }
+            port_err(&err, &http_port);
             exit(1);
         })
         .bind_rustls(format!("0:{}", https_port), tls_config)
@@ -41,15 +37,19 @@ async fn main() -> std::io::Result<()> {
             Ok(hs)
         })
         .unwrap_or_else(|err| {
-            if err.kind() == ErrorKind::PermissionDenied {
-                println!("Error : port {} is not allowed.", https_port);
-            } else {
-                println!("{:?}", err);
-            }
+            port_err(&err, &https_port);
             exit(1);
         })
         .run()
         .await?;
 
     Ok(())
+}
+
+fn port_err(err: &Error, port: &u16) {
+    if err.kind() == ErrorKind::PermissionDenied {
+        println!("Error : port {} is not allowed.", port);
+    } else {
+        println!("{:?}", err);
+    }
 }
