@@ -11,7 +11,6 @@ pub async fn server(
     configuration: config::Config,
     tls_config: ServerConfig)
     -> std::io::Result<()> {
-
     let http_port: u16 = configuration.port;
     let https_port: u16 = configuration.port_tls;
 
