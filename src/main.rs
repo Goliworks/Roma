@@ -1,3 +1,4 @@
+mod http_error;
 mod proxy;
 mod handler;
 mod utils;

@@ -1,5 +1,6 @@
 use actix_web::client::Client;
 use actix_web::{web, Error, HttpRequest, HttpResponse};
+use crate::http_error;
 
 pub struct Proxy<'a> {
     destination: &'a String,
@@ -27,9 +28,10 @@ impl<'a> Proxy<'a> {
 
         let res;
 
+        // Check for bad gateway.
         match forwarded_req.send_body(body).await.map_err(Error::from) {
             Ok(f) => res = f,
-            Err(_) => return Ok(HttpResponse::BadGateway().body("<h1>Error 502</h1><h2>Bad Gateway</h2>"))
+            Err(_) => return Ok(http_error::bad_gateway())
         };
 
         let mut client_resp = HttpResponse::build(res.status());
