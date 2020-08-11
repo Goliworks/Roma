@@ -1,3 +1,4 @@
+mod proxy;
 mod handler;
 mod utils;
 mod config;
