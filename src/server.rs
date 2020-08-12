@@ -5,6 +5,7 @@ use std::io::{ErrorKind, Error};
 use crate::config;
 use crate::handler;
 use rustls::ServerConfig;
+use std::panic;
 
 #[actix_rt::main]
 pub async fn server(
@@ -27,7 +28,7 @@ pub async fn server(
         })
         .unwrap_or_else(|err| {
             port_err(&err, &http_port);
-            exit(1);
+            panic!();
         })
         .bind_rustls(format!("0:{}", https_port), tls_config)
         .and_then(|hs| {
@@ -36,13 +37,14 @@ pub async fn server(
         })
         .unwrap_or_else(|err| {
             port_err(&err, &https_port);
-            exit(1);
+            panic!();
         })
         .run()
         .await
 }
 
 fn port_err(err: &Error, port: &u16) {
+    panic::set_hook(Box::new(|_| {}));
     if err.kind() == ErrorKind::PermissionDenied {
         println!("Error : port {} is not allowed.", port);
     } else {

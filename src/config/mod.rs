@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::env;
+use std::{env, panic};
 use std::collections::HashMap;
 
 use yaml_model::{ConfigYml, Certificates, Tls};
@@ -44,7 +44,13 @@ fn get_yml_config() -> ConfigYml {
     let args: Vec<String> = env::args().collect();
     let cfl = &args[1]; // conf file location.
     let file = File::open(cfl).unwrap();
-    let deserialized_conf: ConfigYml = serde_yaml::from_reader(&file).unwrap();
+    let deserialized_conf: ConfigYml = serde_yaml::from_reader(&file)
+        .unwrap_or_else(|_| {
+            panic::set_hook(Box::new(|_| {
+                println!("Error : Invalid configuration file.\nCheck your YAML structure.");
+            }));
+            panic!();
+        });
     println!("{:?}", deserialized_conf);
     deserialized_conf
 }
