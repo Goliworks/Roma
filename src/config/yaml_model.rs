@@ -17,6 +17,7 @@ pub struct Http {
 pub struct Tls {
     pub port: Option<u16>,
     pub certificates: Option<Vec<Certificates>>,
+    pub auto: Option<bool>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]

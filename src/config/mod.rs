@@ -8,7 +8,8 @@ mod yaml_model;
 pub mod tls;
 
 const DEFAULT_PORT: u16 = 80;
-const DEFAULT_PORT_TLS: u16 = 443;
+pub const DEFAULT_PORT_TLS: u16 = 443;
+const DEFAULT_AUTO_TLS: bool = true;
 
 type Destinations = HashMap<String, String>;
 
@@ -17,6 +18,7 @@ pub struct Config {
     pub destinations: Destinations,
     pub port: u16,
     pub port_tls: u16,
+    pub auto_tls: bool,
     pub certificates: Vec<Certificates>,
 }
 
@@ -28,12 +30,14 @@ impl Config {
             dest.insert(s.0, s.1.location);
         });
 
-        let tls_conf = yml_conf.http.tls.unwrap_or(Tls { port: None, certificates: None });
+        let tls_conf = yml_conf.http.tls.unwrap_or(
+            Tls { port: None, certificates: None, auto: None });
 
         Config {
             destinations: dest,
             port: yml_conf.http.port.unwrap_or(DEFAULT_PORT),
             port_tls: tls_conf.port.unwrap_or(DEFAULT_PORT_TLS),
+            auto_tls: tls_conf.auto.unwrap_or(DEFAULT_AUTO_TLS),
             certificates: tls_conf.certificates.unwrap_or_default(),
         }
     }

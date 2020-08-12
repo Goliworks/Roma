@@ -1,6 +1,5 @@
 use actix_web::{web, App, HttpServer};
 use actix_web::client::Client;
-use std::process::exit;
 use std::io::{ErrorKind, Error};
 use crate::config;
 use crate::handler;
