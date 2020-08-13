@@ -11,7 +11,7 @@ pub async fn handler(
     conf: web::Data<config::Config>,
     client: web::Data<Client>)
     -> Result<HttpResponse, Error> {
-    let dom = utils::get_domain(&req);
+    let dom = utils::host_to_domain(req.connection_info().host().to_string());
     println!("{}", dom);
     println!("{}", req.uri().path_and_query().unwrap()); // test.
 
@@ -31,7 +31,7 @@ pub async fn handler(
     }
 
     // continue if no redirection.
-    let dest = format!("http://{}{}", conf.destinations.get(dom).unwrap(), req.uri().path_and_query().unwrap());
+    let dest = format!("http://{}{}", conf.destinations.get(&dom).unwrap(), req.uri().path_and_query().unwrap());
     let proxy = proxy::Proxy::new(&dest, client.get_ref());
     proxy.stream(req, body).await
 }
