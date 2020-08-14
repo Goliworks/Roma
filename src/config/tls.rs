@@ -1,4 +1,5 @@
 use crate::config::yaml_model::Certificates;
+use crate::utils;
 use rustls::{NoClientAuth, ServerConfig, ResolvesServerCertUsingSNI};
 use std::io::{BufReader, BufRead};
 use std::fs::File;
@@ -24,11 +25,12 @@ fn add_certificate_to_resolver(
     cert: &Certificates,
     resolver: &mut ResolvesServerCertUsingSNI,
 ) {
+
     let br_cert = &mut BufReader::new(File::open(
-        &cert.cert
+        utils::resolve_path(cert.cert.clone())
     ).unwrap());
     let br_key = &mut BufReader::new(File::open(
-        &cert.key
+        utils::resolve_path(cert.key.clone())
     ).unwrap());
 
     let buffer = br_cert.fill_buf().unwrap();
