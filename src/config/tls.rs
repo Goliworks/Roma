@@ -46,28 +46,29 @@ fn add_certificate_to_resolver(
         Box::new(signing_key)
     );
 
-    resolver.add(cn.as_str(), rustls::sign::CertifiedKey::new(
-        cert_chain, signing_key_boxed,
-    )).expect("Invalid certificate");
+    cn.into_iter().for_each(|dom| {
+        resolver.add(dom.as_str(), rustls::sign::CertifiedKey::new(
+            cert_chain.clone(), signing_key_boxed.clone(),
+        )).expect("Invalid certificate");
+    });
 }
 
-fn get_domain(buffer: &[u8]) -> String {
+fn get_domain(buffer: &[u8]) -> Vec<String> {
     let res = pem_to_der(&buffer);
 
-    let cn = match res {
+    match res {
         Ok((_, pem)) => {
             let x509 = parse_x509_der(&pem.contents);
             match x509 {
                 Ok((_, cert)) => {
-                    get_san(&cert);
-                    get_common_name(&cert)
+                    println!("CN = {}", get_common_name(&cert));
+                    get_san(&cert)
                 }
                 _ => panic!("x509 parsing failed: {:?}", x509),
             }
         }
         _ => panic!("PEM parsing failed: {:?}", res),
-    };
-    cn
+    }
 
 }
 
@@ -77,14 +78,15 @@ fn get_common_name(cert: &X509Certificate) -> String {
     cn[1].to_string()
 }
 
-fn get_san(cert: &X509Certificate) {
-    for (a, b) in cert.extensions() {
-        match b.parsed_extension() {
+fn get_san(cert: &X509Certificate) -> Vec<String> {
+    let mut dns:Vec<String> = Vec::new();
+    for (_, ext) in cert.extensions() {
+        match ext.parsed_extension() {
             ParsedExtension::SubjectAlternativeName(san) => {
-                for n in &san.general_names {
-                    match n {
-                        GeneralName::DNSName(a) => {
-                            println!("{}", a);
+                for gn in &san.general_names {
+                    match gn {
+                        GeneralName::DNSName(dom) => {
+                            dns.push(dom.to_string())
                         }
                         _ => {}
                     }
@@ -93,4 +95,6 @@ fn get_san(cert: &X509Certificate) {
             _ => {}
         }
     }
+    println!("SNA : {:?}", dns);
+    dns
 }
