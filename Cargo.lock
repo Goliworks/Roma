@@ -381,6 +381,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b41b7ea54a0c9d92199de89e20e58d49f02f8e699814ef3fdf266f6f748d15c7"
 
 [[package]]
+name = "base64"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3441f0f7b02788e948e47f457ca01f1d7e6d92c693bc132c22b087d3141c03ff"
+
+[[package]]
 name = "bitflags"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -512,13 +518,34 @@ dependencies = [
 ]
 
 [[package]]
-name = "der-parser"
-version = "3.0.4"
+name = "data-encoding"
+version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f51f64dcdf1cdc550d21d73dc959726c7dbeeab4a01481d08084a7736956464e"
+checksum = "d4d0e2d24e5ee3b23a01de38eefdcd978907890701f08ffffd4cb457ca4ee8d6"
+
+[[package]]
+name = "der-oid-macro"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e66558629d772c3be040566b7be07be8c8f5aecee95e4a092dfe2efc313277ad"
 dependencies = [
  "nom",
  "num-bigint",
+ "num-traits",
+ "proc-macro-hack",
+]
+
+[[package]]
+name = "der-parser"
+version = "4.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c97e68dc033b340ff19244dd3caa94c6148383711361d5e3c74f64175760a93c"
+dependencies = [
+ "der-oid-macro",
+ "nom",
+ "num-bigint",
+ "num-traits",
+ "proc-macro-hack",
  "rusticata-macros",
 ]
 
@@ -1081,9 +1108,9 @@ dependencies = [
 
 [[package]]
 name = "num-bigint"
-version = "0.2.6"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "090c7f9998ee0ff65aa5b723e4009f7b217707f1fb5ea551329cc4d6231fb304"
+checksum = "b7f3fc75e3697059fb1bc465e3d8cca6cf92f56854f201158b3f9c77d5a3cfa0"
 dependencies = [
  "autocfg",
  "num-integer",
@@ -1396,6 +1423,17 @@ dependencies = [
  "ring",
  "sct",
  "webpki",
+]
+
+[[package]]
+name = "rustversion"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9bdc5e856e51e685846fb6c13a1f5e5432946c2c90501bdc76a1319f19e29da"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -1907,16 +1945,20 @@ dependencies = [
 
 [[package]]
 name = "x509-parser"
-version = "0.7.0"
+version = "0.8.0-beta4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6dba437c45e779568868b2c46ed1d1c57c98d9f868e47c9bcbfe9114d4cbd97d"
+checksum = "585710d3abbfc2f12099e0e1bfd7f715a84e9374c9113a63ca4b02d8c20fd322"
 dependencies = [
- "base64 0.11.0",
+ "base64 0.12.3",
+ "chrono",
+ "data-encoding",
+ "der-oid-macro",
  "der-parser",
+ "lazy_static",
  "nom",
  "num-bigint",
  "rusticata-macros",
- "time",
+ "rustversion",
 ]
 
 [[package]]

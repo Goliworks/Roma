@@ -7,7 +7,8 @@ use rustls::internal::pemfile::{certs, rsa_private_keys};
 use rustls::sign::{RSASigningKey, SigningKey};
 use std::sync::Arc;
 use x509_parser::pem::pem_to_der;
-use x509_parser::parse_x509_der;
+use x509_parser::{parse_x509_der, X509Certificate};
+use x509_parser::extensions::{ParsedExtension, GeneralName};
 
 pub fn get_tls_config(certs: &Vec<Certificates>) -> ServerConfig {
     let mut resolver = ResolvesServerCertUsingSNI::new();
@@ -34,7 +35,7 @@ fn add_certificate_to_resolver(
     ).unwrap());
 
     let buffer = br_cert.fill_buf().unwrap();
-    let cn = get_common_name(buffer);
+    let cn = get_domain(buffer);
 
     let cert_chain = certs(br_cert).unwrap();
     let mut keys = rsa_private_keys(br_key).unwrap();
@@ -50,21 +51,46 @@ fn add_certificate_to_resolver(
     )).expect("Invalid certificate");
 }
 
-fn get_common_name(buffer: &[u8]) -> String {
+fn get_domain(buffer: &[u8]) -> String {
     let res = pem_to_der(&buffer);
 
-    let subject = match res {
-        Ok((_rem, pem)) => {
-            let res_x509 = parse_x509_der(&pem.contents);
-            match res_x509 {
-                Ok((_rem, cert)) => {
-                    cert.tbs_certificate.subject.to_string()
+    let cn = match res {
+        Ok((_, pem)) => {
+            let x509 = parse_x509_der(&pem.contents);
+            match x509 {
+                Ok((_, cert)) => {
+                    get_san(&cert);
+                    get_common_name(&cert)
                 }
-                _ => panic!("x509 parsing failed: {:?}", res_x509),
+                _ => panic!("x509 parsing failed: {:?}", x509),
             }
         }
         _ => panic!("PEM parsing failed: {:?}", res),
     };
+    cn
+
+}
+
+fn get_common_name(cert: &X509Certificate) -> String {
+    let subject= cert.tbs_certificate.subject.to_string();
     let cn: Vec<&str> = subject.split("CN=").collect();
     cn[1].to_string()
+}
+
+fn get_san(cert: &X509Certificate) {
+    for (a, b) in cert.extensions() {
+        match b.parsed_extension() {
+            ParsedExtension::SubjectAlternativeName(san) => {
+                for n in &san.general_names {
+                    match n {
+                        GeneralName::DNSName(a) => {
+                            println!("{}", a);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
 }
