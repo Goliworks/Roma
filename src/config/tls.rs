@@ -49,7 +49,7 @@ impl <'a, 'b>TLSConfig<'a, 'b> {
         ).unwrap());
 
         let buffer = br_cert.fill_buf().unwrap();
-        let cn = self.get_domain(buffer);
+        let dns = self.get_domain(buffer);
 
         let cert_chain = certs(br_cert).unwrap();
         let mut keys = rsa_private_keys(br_key).unwrap();
@@ -60,7 +60,7 @@ impl <'a, 'b>TLSConfig<'a, 'b> {
             Box::new(signing_key)
         );
 
-        cn.into_iter().for_each(|dom| {
+        dns.into_iter().for_each(|dom| {
             resolver.add(dom.as_str(), rustls::sign::CertifiedKey::new(
                 cert_chain.clone(), signing_key_boxed.clone(),
             )).expect("Invalid certificate");
@@ -83,7 +83,6 @@ impl <'a, 'b>TLSConfig<'a, 'b> {
             }
             _ => panic!("PEM parsing failed: {:?}", res),
         }
-
     }
 
     fn get_common_name(cert: &X509Certificate) -> String {
