@@ -4,6 +4,7 @@ use actix_web::client::Client;
 use crate::utils;
 use crate::config;
 use crate::proxy;
+use crate::http_error;
 
 pub async fn handler(
     req: HttpRequest,
@@ -31,7 +32,15 @@ pub async fn handler(
     }
 
     // continue if no redirection.
-    let dest = format!("http://{}{}", conf.destinations.get(&dom).unwrap(), req.uri().path_and_query().unwrap());
-    let proxy = proxy::Proxy::new(&dest, client.get_ref());
-    proxy.stream(req, body).await
+    match conf.destinations.get(&dom) {
+        Some(d) => {
+            let dest = format!("http://{}{}", d, req.uri().path_and_query().unwrap());
+            let proxy = proxy::Proxy::new(&dest, client.get_ref());
+            proxy.stream(req, body).await
+        },
+        None => {
+            println!("Unknow domain");
+            Ok(http_error::bad_gateway())
+        },
+    }
 }
