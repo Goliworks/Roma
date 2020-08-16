@@ -76,7 +76,7 @@ impl <'a, 'b>TLSConfig<'a, 'b> {
                 match x509 {
                     Ok((_, cert)) => {
                         println!("CN = {}",  TLSConfig::get_common_name(&cert));
-                        TLSConfig::get_san(&cert)
+                        self.get_san(&cert)
                     }
                     _ => panic!("x509 parsing failed: {:?}", x509),
                 }
@@ -92,7 +92,7 @@ impl <'a, 'b>TLSConfig<'a, 'b> {
         cn[1].to_string()
     }
 
-    fn get_san(cert: &X509Certificate) -> Vec<String> {
+    fn get_san(&self, cert: &X509Certificate) -> Vec<String> {
         let mut dns:Vec<String> = Vec::new();
         for (_, ext) in cert.extensions() {
             match ext.parsed_extension() {
@@ -100,7 +100,13 @@ impl <'a, 'b>TLSConfig<'a, 'b> {
                     for gn in &san.general_names {
                         match gn {
                             GeneralName::DNSName(dom) => {
-                                dns.push(dom.to_string())
+                                // Check if DNS name is generic.
+                                let gen: Vec<&str> = dom.split("*.").collect();
+                                if gen[0].is_empty() && gen.len() > 1 {
+                                    dns.extend(self.generics(gen[1]));
+                                } else {
+                                    dns.push(dom.to_string())
+                                }
                             }
                             _ => {}
                         }
@@ -110,6 +116,18 @@ impl <'a, 'b>TLSConfig<'a, 'b> {
             }
         }
         println!("SNA : {:?}", dns);
+        dns
+    }
+
+    fn generics(&self, domain: &str) -> Vec<String>{
+        let mut dns: Vec<String> = Vec::new();
+        for dom in &self.domains {
+            let split:Vec<&str> = dom.split(".").collect();
+            let check_dom = format!("{}.{}", split[0], domain);
+            if dom == &&check_dom {
+                dns.push(check_dom);
+            }
+        }
         dns
     }
 }
