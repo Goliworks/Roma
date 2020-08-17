@@ -13,8 +13,9 @@ pub async fn handler(
     client: web::Data<Client>)
     -> Result<HttpResponse, Error> {
     let dom = utils::host_to_domain(req.connection_info().host().to_string());
+    let paq = req.uri().path_and_query().unwrap();
     println!("{}", dom);
-    println!("{}", req.uri().path_and_query().unwrap()); // test.
+    println!("{}", paq); // test.
 
     // https redirection.
     let scheme = req.connection_info().scheme().to_string();
@@ -24,7 +25,7 @@ pub async fn handler(
         } else {
             "".to_string()
         };
-        let red_url = format!("https://{}{}", dom, port);
+        let red_url = format!("https://{}{}{}", dom, port, paq);
         return Ok(HttpResponse::MovedPermanently()
             .header(http::header::LOCATION, red_url)
             .finish()
@@ -34,7 +35,7 @@ pub async fn handler(
     // continue if no redirection.
     match conf.destinations.get(&dom) {
         Some(d) => {
-            let dest = format!("http://{}{}", d, req.uri().path_and_query().unwrap());
+            let dest = format!("http://{}{}", d, paq);
             let proxy = proxy::Proxy::new(&dest, client.get_ref());
             proxy.stream(req, body).await
         },
