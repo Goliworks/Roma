@@ -44,9 +44,8 @@ impl Config {
 }
 
 fn get_yml_config() -> ConfigYml {
-    // Get command line arguments.
-    let args: Vec<String> = env::args().collect();
-    let cfl = &args[1]; // conf file location.
+    // Get env var.
+    let cfl = env::var("ROMA_CONFIG_FILE").unwrap(); // conf file location.
     let file = File::open(cfl).unwrap();
     let deserialized_conf: ConfigYml = serde_yaml::from_reader(&file)
         .unwrap_or_else(|_| {
