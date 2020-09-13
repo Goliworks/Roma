@@ -5,6 +5,7 @@ use std::collections::HashMap;
 pub struct ConfigYml {
     pub http: Http,
     pub services: HashMap<String, Services>,
+    pub redirections: Redirections,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -29,4 +30,9 @@ pub struct Certificates {
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Services {
     pub location: String
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct Redirections {
+    pub simple: HashMap<String, String>
 }

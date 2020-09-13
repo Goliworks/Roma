@@ -17,6 +17,18 @@ pub async fn handler(
     println!("{}", dom);
     println!("{}", paq); // test.
 
+    // simple redirection
+
+    match conf.redirections.get( &dom) {
+        Some(tar) => {
+            return Ok(HttpResponse::MovedPermanently()
+                .header(http::header::LOCATION, tar.to_string())
+                .finish()
+                .into_body());
+        }
+        None => {}
+    }
+
     // https redirection.
     let scheme = req.connection_info().scheme().to_string();
     if scheme == "http" && conf.auto_tls {
